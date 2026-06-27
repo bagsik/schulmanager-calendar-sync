@@ -1,0 +1,6 @@
+.env
+data/
+output/
+node_modules/
+.playwright-mcp/
+server-package/
