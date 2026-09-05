@@ -23,9 +23,6 @@ export async function pushGoogleCalendar({ events, range, logger = console }) {
 
   const desiredEvents = new Map();
   for (const event of events) {
-    if (event.cancelled) {
-      continue;
-    }
     const googleEvent = toGoogleEvent(event);
     desiredEvents.set(googleEvent.id, googleEvent);
   }
