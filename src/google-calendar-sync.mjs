@@ -156,8 +156,12 @@ function cleanupRenderedTitle(text) {
     .trim();
 }
 
+const GRAPHEME_SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
 export function strikethroughTitle(title) {
-  return [...title].map((char) => `${char}̶`).join("");
+  return [...GRAPHEME_SEGMENTER.segment(title)]
+    .map(({ segment }) => `${segment}̶`)
+    .join("");
 }
 
 function isSameGoogleEvent(existing, desired) {

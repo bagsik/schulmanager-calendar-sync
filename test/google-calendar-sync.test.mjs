@@ -53,3 +53,7 @@ test("renderEventTitle drops the {icon} placeholder when no icon matches", () =>
 test("strikethroughTitle overlays every character with a combining stroke", () => {
   assert.equal(strikethroughTitle("NW"), "N̶W̶");
 });
+
+test("strikethroughTitle keeps a multi-codepoint flag emoji intact as one grapheme", () => {
+  assert.equal(strikethroughTitle("🇬🇧 Englisch"), "🇬🇧̶ ̶E̶n̶g̶l̶i̶s̶c̶h̶");
+});
