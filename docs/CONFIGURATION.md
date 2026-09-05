@@ -7,7 +7,7 @@ Copy `.env.example` to `.env` and keep the resulting file outside version contro
 | Variable | Required | Default | Description |
 | --- | --- | --- | --- |
 | `SCHULMANAGER_TOKEN` | Yes on first run | — | Bearer token from an authorized Schulmanager session. A refreshed token is stored in `data/token-store.json`. |
-| `SCHULMANAGER_STUDENT_ID` | No | auto-detected | Numeric student ID when `/api/login-status` cannot discover the associated student. |
+| `SCHULMANAGER_STUDENT_ID` | No | auto-detected | Numeric student ID override. Auto-detection covers both a student login (`associatedStudent`) and a parent login (the first child under `associatedParents`); set this only when discovery still fails or to pick a specific child on a parent account with multiple children. |
 | `SCHULMANAGER_BUNDLE_VERSION` | No | auto-discovered | Frontend bundle identifier. Override only when discovery stops working. |
 | `SCHULMANAGER_BASE_URL` | No | `https://login.schulmanager-online.de` | Schulmanager origin. Do not point this at an untrusted host because the bearer token is sent to it. |
 | `SCHULMANAGER_TIMEZONE` | No | `Europe/Berlin` | IANA timezone used for lesson dates and Google events. |
