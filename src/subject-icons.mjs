@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 export const DEFAULT_SUBJECT_ICONS = {
@@ -72,9 +72,13 @@ function mappingFilePath() {
 function loadMapping() {
   const filePath = mappingFilePath();
   try {
-    if (!existsSync(filePath)) {
-      mkdirSync(path.dirname(filePath), { recursive: true });
-      writeFileSync(filePath, `${JSON.stringify(DEFAULT_SUBJECT_ICONS, null, 2)}\n`, "utf8");
+    mkdirSync(path.dirname(filePath), { recursive: true });
+    try {
+      writeFileSync(filePath, `${JSON.stringify(DEFAULT_SUBJECT_ICONS, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+    } catch (writeError) {
+      if (writeError.code !== "EEXIST") {
+        throw writeError;
+      }
     }
     return JSON.parse(readFileSync(filePath, "utf8"));
   } catch (error) {
