@@ -117,7 +117,13 @@ function titleTemplate() {
 }
 
 export function renderEventTitle(template, event) {
-  const fields = {
+  const fields = titleFields(event);
+  const substituted = substituteTemplate(template, fields);
+  return cleanupRenderedTitle(substituted);
+}
+
+function titleFields(event) {
+  return {
     summary: event.summary,
     subject: event.subjectLabel || "",
     subjectName: event.subjectName || "",
@@ -127,11 +133,16 @@ export function renderEventTitle(template, event) {
       .join(", "),
     classHour: event.classHourNumber || ""
   };
+}
 
-  return template
-    .replace(/\{(\w+)\}/g, (match, key) =>
-      Object.prototype.hasOwnProperty.call(fields, key) ? fields[key] : match
-    )
+function substituteTemplate(template, fields) {
+  return template.replace(/\{(\w+)\}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(fields, key) ? fields[key] : match
+  );
+}
+
+function cleanupRenderedTitle(text) {
+  return text
     .replace(/\(\s*\)/g, "")
     .replace(/[ \t]+/g, " ")
     .trim();
