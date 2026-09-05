@@ -1,9 +1,10 @@
 import { createHash, createSign } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { rfc3339WithOffset } from "./timezone.mjs";
+import { subjectIcon } from "./subject-icons.mjs";
 
 const MANAGED_BY = "schulmanager-calendar-sync";
-const DEFAULT_TITLE_TEMPLATE = "({location}) {summary}";
+const DEFAULT_TITLE_TEMPLATE = "({location}) {icon} {summary}";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CALENDAR_API_ROOT = "https://www.googleapis.com/calendar/v3";
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
@@ -133,6 +134,7 @@ function titleFields(event) {
     summary: event.summary,
     subject: event.subjectLabel || "",
     subjectName: event.subjectName || "",
+    icon: subjectIcon(event.subjectName, event.subjectLabel),
     location: event.location || "",
     teachers: (event.teacherNames || [])
       .map((name) => name.replace(/^.*\((.*)\)$/, "$1"))

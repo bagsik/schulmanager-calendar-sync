@@ -36,6 +36,20 @@ test("renderEventTitle leaves unknown placeholders untouched", () => {
   assert.equal(title, "{unknown}-Math");
 });
 
+test("renderEventTitle resolves {icon} from the subject name", () => {
+  const title = renderEventTitle("{icon} {subject}", baseEvent);
+  assert.equal(title, "➗ Math");
+});
+
+test("renderEventTitle drops the {icon} placeholder when no icon matches", () => {
+  const title = renderEventTitle("{icon} {subject}", {
+    ...baseEvent,
+    subjectName: "Unknown Course",
+    subjectLabel: "XYZ"
+  });
+  assert.equal(title, "XYZ");
+});
+
 test("strikethroughTitle overlays every character with a combining stroke", () => {
   assert.equal(strikethroughTitle("NW"), "N̶W̶");
 });
