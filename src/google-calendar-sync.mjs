@@ -21,14 +21,7 @@ export async function pushGoogleCalendar({ events, range, logger = console }) {
   const credentials = await readCredentials();
   const accessToken = await getAccessToken(credentials);
 
-  const desiredEvents = new Map();
-  for (const event of events) {
-    if (event.cancelled) {
-      continue;
-    }
-    const googleEvent = toGoogleEvent(event);
-    desiredEvents.set(googleEvent.id, googleEvent);
-  }
+  const desiredEvents = buildDesiredGoogleEvents(events);
 
   const existingEvents = await listManagedEvents({ accessToken, calendarId, range });
   const existingById = new Map(existingEvents.map((event) => [event.id, event]));
@@ -80,6 +73,15 @@ export async function pushGoogleCalendar({ events, range, logger = console }) {
     `Google Calendar sync finished: ${inserted} inserted, ${updated} updated, ${deleted} deleted, ${skipped} unchanged`
   );
   return result;
+}
+
+export function buildDesiredGoogleEvents(events) {
+  const desiredEvents = new Map();
+  for (const event of events) {
+    const googleEvent = toGoogleEvent(event);
+    desiredEvents.set(googleEvent.id, googleEvent);
+  }
+  return desiredEvents;
 }
 
 function toGoogleEvent(event) {
