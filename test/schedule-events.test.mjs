@@ -56,3 +56,31 @@ test("can include cancelled lessons explicitly", () => {
   assert.equal(events[0].cancelled, true);
   assert.match(events[0].summary, /^Cancelled:/);
 });
+
+test("normalizes replacement 'event' lessons that carry no actualLesson/originalLessons", () => {
+  const events = normalizeScheduleEvents({
+    lessons: [
+      {
+        date: "2026-07-13",
+        type: "event",
+        isCancelled: false,
+        isNew: true,
+        classHour: { id: 1, number: 1 },
+        event: {
+          text: "Klassenlehrerunterricht",
+          teachers: [{ abbreviation: "Wer", firstname: "Rabea", lastname: "Wessel" }],
+          rooms: [{ name: "A.104" }],
+          absenceId: 18087009
+        }
+      }
+    ],
+    classHours
+  });
+
+  assert.equal(events.length, 1);
+  assert.equal(events[0].subjectLabel, "Klassenlehrerunterricht");
+  assert.equal(events[0].location, "A.104");
+  assert.deepEqual(events[0].teacherNames, ["Wer (Rabea Wessel)"]);
+  assert.equal(events[0].special, true);
+  assert.match(events[0].summary, /^Special: Klassenlehrerunterricht$/);
+});

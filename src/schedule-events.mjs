@@ -39,7 +39,8 @@ export function normalizeScheduleEvents({
 function lessonToEvent({ lesson, classHour, timezone }) {
   const actual = lesson.actualLesson;
   const original = lesson.originalLessons?.[0];
-  const source = actual || original;
+  const event = lesson.event;
+  const source = actual || original || event;
 
   if (!source) {
     return null;
@@ -54,11 +55,15 @@ function lessonToEvent({ lesson, classHour, timezone }) {
   }
 
   const subjectLabel = collapseWhitespace(
-    actual?.subjectLabel || original?.subjectLabel || source.subject?.abbreviation || "Lesson"
+    actual?.subjectLabel ||
+      original?.subjectLabel ||
+      source.subject?.abbreviation ||
+      event?.text ||
+      "Lesson"
   );
   const subjectName = source.subject?.name || subjectLabel;
   const teachers = (source.teachers || []).map(formatTeacher).filter(Boolean);
-  const room = source.room?.name || "";
+  const room = source.room?.name || source.rooms?.[0]?.name || "";
   const classHourNumber = lesson.classHour?.number || classHour.number;
   const cancelled = Boolean(lesson.isCancelled);
   const changed = lesson.type === "changedLesson" || lesson.isSubstitution;
@@ -212,6 +217,7 @@ function buildSourceUid(lesson) {
     source.lessonId ||
     lesson.lessonId ||
     source.courseId ||
+    lesson.event?.absenceId ||
     "unknown";
 
   return [
