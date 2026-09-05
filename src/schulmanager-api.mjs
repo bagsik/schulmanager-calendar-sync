@@ -29,6 +29,13 @@ export class SchulmanagerApi {
   async getCurrentStudent() {
     const status = await this.getLoginStatus();
     const user = status?.user;
+    const studentId = process.env.SCHULMANAGER_STUDENT_ID;
+
+    // An explicit ID must win over auto-discovery so parent accounts with
+    // multiple children can select the intended student.
+    if (studentId) {
+      return { id: Number(studentId) };
+    }
 
     const directStudent = user?.associatedStudent;
     if (directStudent?.id) {
@@ -40,11 +47,6 @@ export class SchulmanagerApi {
     const parentStudent = user?.associatedParents?.[0]?.student;
     if (parentStudent?.id) {
       return parentStudent;
-    }
-
-    const studentId = process.env.SCHULMANAGER_STUDENT_ID;
-    if (studentId) {
-      return { id: Number(studentId) };
     }
 
     throw new Error(

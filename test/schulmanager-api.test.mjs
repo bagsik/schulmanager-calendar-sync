@@ -49,6 +49,22 @@ test("getCurrentStudent falls back to the first child of a parent account", asyn
   assert.deepEqual(await api.getCurrentStudent(), { id: 7 });
 });
 
+test("getCurrentStudent lets SCHULMANAGER_STUDENT_ID select a specific child", async () => {
+  const api = new SchulmanagerApi({
+    token: "test-token",
+    fetchImpl: fakeFetch({
+      associatedStudent: null,
+      associatedParents: [{ id: 1, student: { id: 7 } }, { id: 2, student: { id: 8 } }]
+    })
+  });
+  process.env.SCHULMANAGER_STUDENT_ID = "8";
+  try {
+    assert.deepEqual(await api.getCurrentStudent(), { id: 8 });
+  } finally {
+    delete process.env.SCHULMANAGER_STUDENT_ID;
+  }
+});
+
 test("getCurrentStudent falls back to SCHULMANAGER_STUDENT_ID when discovery fails", async () => {
   const api = new SchulmanagerApi({
     token: "test-token",
