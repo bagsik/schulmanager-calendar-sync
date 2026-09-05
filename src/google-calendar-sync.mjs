@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { rfc3339WithOffset } from "./timezone.mjs";
 
 const MANAGED_BY = "schulmanager-calendar-sync";
+const DEFAULT_TITLE_TEMPLATE = "({location}) {summary}";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CALENDAR_API_ROOT = "https://www.googleapis.com/calendar/v3";
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
@@ -86,7 +87,7 @@ function toGoogleEvent(event) {
   const timeZone = event.timezone || "Europe/Berlin";
   return {
     id: googleEventId(event.uid),
-    summary: googleEventSummary(event),
+    summary: renderEventTitle(titleTemplate(), event),
     description: event.description || "",
     location: event.location || "",
     start: {
@@ -111,8 +112,29 @@ function googleEventId(uid) {
   return `sm${createHash("sha256").update(uid).digest("hex").slice(0, 48)}`;
 }
 
-function googleEventSummary(event) {
-  return event.location ? `(${event.location}) ${event.summary}` : event.summary;
+function titleTemplate() {
+  return process.env.GOOGLE_CALENDAR_TITLE_TEMPLATE || DEFAULT_TITLE_TEMPLATE;
+}
+
+export function renderEventTitle(template, event) {
+  const fields = {
+    summary: event.summary,
+    subject: event.subjectLabel || "",
+    subjectName: event.subjectName || "",
+    location: event.location || "",
+    teachers: (event.teacherNames || [])
+      .map((name) => name.replace(/^.*\((.*)\)$/, "$1"))
+      .join(", "),
+    classHour: event.classHourNumber || ""
+  };
+
+  return template
+    .replace(/\{(\w+)\}/g, (match, key) =>
+      Object.prototype.hasOwnProperty.call(fields, key) ? fields[key] : match
+    )
+    .replace(/\(\s*\)/g, "")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 }
 
 function isSameGoogleEvent(existing, desired) {

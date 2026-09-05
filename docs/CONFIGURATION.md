@@ -32,8 +32,24 @@ Boolean values accept `1`, `true`, `yes`, or `on` (case-insensitive).
 | `GOOGLE_CALENDAR_ID` | When enabled | — | Target calendar ID. It is often an email-like value and should be treated as private metadata. |
 | `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | When enabled | `/data/google-service-account.json` | Path to the mounted JSON key. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Alternative | — | Complete credentials JSON supplied through the environment. Prefer a mounted file to avoid accidental log or process inspection exposure. |
+| `GOOGLE_CALENDAR_TITLE_TEMPLATE` | No | `({location}) {summary}` | Custom event title. See placeholders below. |
 
 The target calendar must be shared with the service account's `client_email` and grant permission to edit events.
+
+### Title placeholders
+
+`GOOGLE_CALENDAR_TITLE_TEMPLATE` supports the following placeholders. An unknown placeholder is left untouched. Any `()` left empty by a missing placeholder (e.g. no room) is dropped, and repeated whitespace is collapsed.
+
+| Placeholder | Value |
+| --- | --- |
+| `{summary}` | The normalized summary, including a `Changed:`/`Cancelled:`/`Special:` prefix when applicable. |
+| `{location}` | The room name, or empty when none is known. |
+| `{subject}` | The short subject label (e.g. `Math`). |
+| `{subjectName}` | The full subject name. |
+| `{teachers}` | Comma-separated teacher full names, without abbreviations. |
+| `{classHour}` | The class hour number(s). |
+
+Example: `GOOGLE_CALENDAR_TITLE_TEMPLATE={subject} - {location}` renders titles like `Math - Room 204`.
 
 ## Container and health server
 
