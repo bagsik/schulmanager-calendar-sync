@@ -33,6 +33,7 @@ Boolean values accept `1`, `true`, `yes`, or `on` (case-insensitive).
 | `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | When enabled | `/data/google-service-account.json` | Path to the mounted JSON key. |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Alternative | — | Complete credentials JSON supplied through the environment. Prefer a mounted file to avoid accidental log or process inspection exposure. |
 | `GOOGLE_CALENDAR_TITLE_TEMPLATE` | No | `({location}) {summary}` | Custom event title. See placeholders below. |
+| `GOOGLE_CALENDAR_STRIKETHROUGH_CANCELLED` | No | `false` | Render cancelled lesson titles with a Unicode strikethrough overlay. Cosmetic only: the Calendar API has no real text formatting, and rendering may vary by client. |
 
 The target calendar must be shared with the service account's `client_email` and grant permission to edit events.
 

@@ -85,9 +85,13 @@ export async function pushGoogleCalendar({ events, range, logger = console }) {
 
 function toGoogleEvent(event) {
   const timeZone = event.timezone || "Europe/Berlin";
+  const title = renderEventTitle(titleTemplate(), event);
   return {
     id: googleEventId(event.uid),
-    summary: renderEventTitle(titleTemplate(), event),
+    summary:
+      event.cancelled && envFlag("GOOGLE_CALENDAR_STRIKETHROUGH_CANCELLED")
+        ? strikethroughTitle(title)
+        : title,
     description: event.description || "",
     location: event.location || "",
     start: {
@@ -146,6 +150,10 @@ function cleanupRenderedTitle(text) {
     .replace(/\(\s*\)/g, "")
     .replace(/[ \t]+/g, " ")
     .trim();
+}
+
+export function strikethroughTitle(title) {
+  return [...title].map((char) => `${char}̶`).join("");
 }
 
 function isSameGoogleEvent(existing, desired) {

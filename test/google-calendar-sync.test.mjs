@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderEventTitle } from "../src/google-calendar-sync.mjs";
+import { renderEventTitle, strikethroughTitle } from "../src/google-calendar-sync.mjs";
 
 const baseEvent = {
   summary: "Changed: Math",
@@ -34,4 +34,8 @@ test("renderEventTitle falls back to the raw teacher entry without a full name",
 test("renderEventTitle leaves unknown placeholders untouched", () => {
   const title = renderEventTitle("{unknown}-{subject}", baseEvent);
   assert.equal(title, "{unknown}-Math");
+});
+
+test("strikethroughTitle overlays every character with a combining stroke", () => {
+  assert.equal(strikethroughTitle("NW"), "N̶W̶");
 });
