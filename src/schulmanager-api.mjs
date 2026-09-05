@@ -28,10 +28,18 @@ export class SchulmanagerApi {
 
   async getCurrentStudent() {
     const status = await this.getLoginStatus();
-    const student = status?.user?.associatedStudent;
+    const user = status?.user;
 
-    if (student?.id) {
-      return student;
+    const directStudent = user?.associatedStudent;
+    if (directStudent?.id) {
+      return directStudent;
+    }
+
+    // Parent accounts have no associatedStudent of their own; the linked
+    // children are listed under associatedParents[*].student instead.
+    const parentStudent = user?.associatedParents?.[0]?.student;
+    if (parentStudent?.id) {
+      return parentStudent;
     }
 
     const studentId = process.env.SCHULMANAGER_STUDENT_ID;
