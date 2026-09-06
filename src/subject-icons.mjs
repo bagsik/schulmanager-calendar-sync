@@ -44,8 +44,7 @@ export const DEFAULT_SUBJECT_ICONS = {
   default: ""
 };
 
-export function subjectIcon(subjectName, subjectLabel) {
-  const mapping = loadMapping();
+export function subjectIcon(subjectName, subjectLabel, mapping = loadSubjectIconMapping()) {
   const { default: fallback = "", ...patterns } = mapping;
 
   for (const candidate of [subjectName, subjectLabel]) {
@@ -69,7 +68,7 @@ function mappingFilePath() {
   return process.env.GOOGLE_CALENDAR_SUBJECT_ICONS_FILE || path.join(dataDir, "subject-icons.json");
 }
 
-function loadMapping() {
+export function loadSubjectIconMapping() {
   const filePath = mappingFilePath();
   try {
     mkdirSync(path.dirname(filePath), { recursive: true });
@@ -80,7 +79,16 @@ function loadMapping() {
         throw writeError;
       }
     }
-    return JSON.parse(readFileSync(filePath, "utf8"));
+    const mapping = JSON.parse(readFileSync(filePath, "utf8"));
+    if (
+      !mapping ||
+      Array.isArray(mapping) ||
+      typeof mapping !== "object" ||
+      Object.values(mapping).some((icon) => typeof icon !== "string")
+    ) {
+      throw new TypeError("mapping must be a JSON object with string icon values");
+    }
+    return mapping;
   } catch (error) {
     console.error(
       `Could not load subject icon mapping from ${filePath}, falling back to built-in defaults: ${error.message}`

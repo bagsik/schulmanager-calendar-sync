@@ -3,7 +3,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { DEFAULT_SUBJECT_ICONS, subjectIcon } from "../src/subject-icons.mjs";
+import {
+  DEFAULT_SUBJECT_ICONS,
+  loadSubjectIconMapping,
+  subjectIcon
+} from "../src/subject-icons.mjs";
 
 function withMappingFile(filePath, fn) {
   const previous = process.env.GOOGLE_CALENDAR_SUBJECT_ICONS_FILE;
@@ -17,6 +21,18 @@ function withMappingFile(filePath, fn) {
       process.env.GOOGLE_CALENDAR_SUBJECT_ICONS_FILE = previous;
     }
   }
+}
+
+function captureErrors(fn) {
+  const originalError = console.error;
+  const messages = [];
+  console.error = (message) => messages.push(message);
+  try {
+    fn();
+  } finally {
+    console.error = originalError;
+  }
+  return messages;
 }
 
 test("subjectIcon creates the mapping file from the built-in defaults when missing", () => {
@@ -79,7 +95,29 @@ test("subjectIcon falls back to built-in defaults when the mapping file is inval
   writeFileSync(filePath, "{not json");
   try {
     withMappingFile(filePath, () => {
-      assert.equal(subjectIcon("Mathematics", "Math"), "➗");
+      const messages = captureErrors(() => {
+        assert.equal(subjectIcon("Mathematics", "Math"), "➗");
+      });
+      assert.match(messages[0], /falling back to built-in defaults/);
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("loadSubjectIconMapping rejects valid JSON with an unsafe shape", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "subject-icons-"));
+  const filePath = path.join(dir, "subject-icons.json");
+  writeFileSync(filePath, "null");
+  try {
+    withMappingFile(filePath, () => {
+      let mapping;
+      const messages = captureErrors(() => {
+        mapping = loadSubjectIconMapping();
+      });
+      assert.equal(mapping, DEFAULT_SUBJECT_ICONS);
+      assert.equal(subjectIcon("Mathematics", "Math", mapping), "➗");
+      assert.match(messages[0], /mapping must be a JSON object with string icon values/);
     });
   } finally {
     rmSync(dir, { recursive: true, force: true });

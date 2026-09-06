@@ -52,7 +52,7 @@ Keys support a `*` wildcard and are matched case-insensitively against `{subject
 }
 ```
 
-If the file is missing, unreadable, or invalid JSON, the sync falls back to the built-in defaults and logs a warning rather than failing.
+The file must be a JSON object whose values are strings. If it is unreadable, invalid JSON, or has a different shape, the sync falls back to the built-in defaults and logs a warning rather than failing.
 
 ### Title placeholders
 
@@ -64,13 +64,13 @@ If the file is missing, unreadable, or invalid JSON, the sync falls back to the 
 | `{location}` | The room name, or empty when none is known. |
 | `{subject}` | The short subject label (e.g. `Math`). |
 | `{subjectName}` | The full subject name. |
-| `{icon}` | An emoji for the subject, looked up from the subject-icons mapping file (see below); empty when nothing matches. |
+| `{icon}` | An emoji for the subject, looked up from the subject-icons mapping file (see above); empty when nothing matches. |
 | `{teachers}` | Comma-separated teacher full names, without abbreviations. |
 | `{classHour}` | The class hour number(s). |
 
 Example: `GOOGLE_CALENDAR_TITLE_TEMPLATE={icon} {subject} - {location}` renders titles like `➗ Math - Room 204`.
 
-The built-in icon table is matched against the start of `{subjectName}` then `{subject}` (e.g. `Mathe`, `Biologie`, `Sport`, `Englisch`, ...); subjects it doesn't recognize get no icon unless `GOOGLE_CALENDAR_SUBJECT_ICONS` sets a `default`. Add entries for subjects specific to your school via that variable.
+The built-in icon table is matched against `{subjectName}` and then `{subject}` (e.g. `Mathe`, `Biologie`, `Sport`, `Englisch`, ...); subjects it doesn't recognize get no icon unless the mapping file sets a `default`. Add entries for subjects specific to your school by editing that file.
 
 ## Container and health server
 

@@ -1,7 +1,7 @@
 import { createHash, createSign } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { rfc3339WithOffset } from "./timezone.mjs";
-import { subjectIcon } from "./subject-icons.mjs";
+import { loadSubjectIconMapping, subjectIcon } from "./subject-icons.mjs";
 
 const MANAGED_BY = "schulmanager-calendar-sync";
 const DEFAULT_TITLE_TEMPLATE = "({location}) {icon} {summary}";
@@ -78,17 +78,19 @@ export async function pushGoogleCalendar({ events, range, logger = console }) {
 }
 
 export function buildDesiredGoogleEvents(events) {
+  const template = titleTemplate();
+  const iconMapping = template.includes("{icon}") ? loadSubjectIconMapping() : undefined;
   const desiredEvents = new Map();
   for (const event of events) {
-    const googleEvent = toGoogleEvent(event);
+    const googleEvent = toGoogleEvent(event, { template, iconMapping });
     desiredEvents.set(googleEvent.id, googleEvent);
   }
   return desiredEvents;
 }
 
-function toGoogleEvent(event) {
+function toGoogleEvent(event, { template, iconMapping }) {
   const timeZone = event.timezone || "Europe/Berlin";
-  const title = renderEventTitle(titleTemplate(), event);
+  const title = renderEventTitle(template, event, { iconMapping });
   return {
     id: googleEventId(event.uid),
     summary:
@@ -123,18 +125,21 @@ function titleTemplate() {
   return process.env.GOOGLE_CALENDAR_TITLE_TEMPLATE || DEFAULT_TITLE_TEMPLATE;
 }
 
-export function renderEventTitle(template, event) {
-  const fields = titleFields(event);
+export function renderEventTitle(template, event, { iconMapping } = {}) {
+  const fields = titleFields(event, {
+    iconMapping,
+    resolveIcon: template.includes("{icon}")
+  });
   const substituted = substituteTemplate(template, fields);
   return cleanupRenderedTitle(substituted);
 }
 
-function titleFields(event) {
+function titleFields(event, { iconMapping, resolveIcon }) {
   return {
     summary: event.summary,
     subject: event.subjectLabel || "",
     subjectName: event.subjectName || "",
-    icon: subjectIcon(event.subjectName, event.subjectLabel),
+    icon: resolveIcon ? subjectIcon(event.subjectName, event.subjectLabel, iconMapping) : "",
     location: event.location || "",
     teachers: (event.teacherNames || [])
       .map((name) => name.replace(/^.*\((.*)\)$/, "$1"))

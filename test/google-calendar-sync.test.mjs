@@ -5,6 +5,7 @@ import {
   renderEventTitle,
   strikethroughTitle
 } from "../src/google-calendar-sync.mjs";
+import { DEFAULT_SUBJECT_ICONS } from "../src/subject-icons.mjs";
 
 const baseEvent = {
   summary: "Changed: Math",
@@ -41,16 +42,22 @@ test("renderEventTitle leaves unknown placeholders untouched", () => {
 });
 
 test("renderEventTitle resolves {icon} from the subject name", () => {
-  const title = renderEventTitle("{icon} {subject}", baseEvent);
+  const title = renderEventTitle("{icon} {subject}", baseEvent, {
+    iconMapping: DEFAULT_SUBJECT_ICONS
+  });
   assert.equal(title, "➗ Math");
 });
 
 test("renderEventTitle drops the {icon} placeholder when no icon matches", () => {
-  const title = renderEventTitle("{icon} {subject}", {
-    ...baseEvent,
-    subjectName: "Unknown Course",
-    subjectLabel: "XYZ"
-  });
+  const title = renderEventTitle(
+    "{icon} {subject}",
+    {
+      ...baseEvent,
+      subjectName: "Unknown Course",
+      subjectLabel: "XYZ"
+    },
+    { iconMapping: DEFAULT_SUBJECT_ICONS }
+  );
   assert.equal(title, "XYZ");
 });
 
@@ -60,6 +67,8 @@ test("strikethroughTitle overlays every character with a combining stroke", () =
 
 test("strikethroughTitle keeps a multi-codepoint flag emoji intact as one grapheme", () => {
   assert.equal(strikethroughTitle("🇬🇧 Englisch"), "🇬🇧̶ ̶E̶n̶g̶l̶i̶s̶c̶h̶");
+});
+
 test("insertEvent revives a tombstoned event after Google returns HTTP 409", async () => {
   const originalFetch = globalThis.fetch;
   const requests = [];
