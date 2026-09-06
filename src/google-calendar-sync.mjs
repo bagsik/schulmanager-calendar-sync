@@ -264,13 +264,25 @@ async function listManagedEvents({ accessToken, calendarId, range }) {
   return events;
 }
 
-async function insertEvent({ accessToken, calendarId, event }) {
-  await googleRequest({
-    accessToken,
-    path: `/calendars/${encodeURIComponent(calendarId)}/events?sendUpdates=none`,
-    method: "POST",
-    body: event
-  });
+export async function insertEvent({ accessToken, calendarId, event }) {
+  try {
+    await googleRequest({
+      accessToken,
+      path: `/calendars/${encodeURIComponent(calendarId)}/events?sendUpdates=none`,
+      method: "POST",
+      body: event
+    });
+  } catch (error) {
+    if (error.status === 409) {
+      // The id was previously used by an event that got cancelled/deleted
+      // outside our reconciliation (e.g. manually in Google Calendar), so
+      // events.list no longer returns it but the id is still reserved.
+      // Revive it instead of failing the whole sync.
+      await updateEvent({ accessToken, calendarId, event });
+      return;
+    }
+    throw error;
+  }
 }
 
 async function updateEvent({ accessToken, calendarId, event }) {
@@ -313,9 +325,11 @@ async function googleRequest({ accessToken, path, method = "GET", body = null })
         await delay(backoffMs(attempt));
         continue;
       }
-      throw new Error(
+      const httpError = new Error(
         `${label} failed with HTTP ${response.status}: ${safeGoogleError(text)}`
       );
+      httpError.status = response.status;
+      throw httpError;
     } catch (error) {
       if (error.name === "AbortError") {
         if (attempt < MAX_RETRIES) {
