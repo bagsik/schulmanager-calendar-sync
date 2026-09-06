@@ -1,9 +1,10 @@
 import { createHash, createSign } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { rfc3339WithOffset } from "./timezone.mjs";
+import { loadSubjectIconMapping, subjectIcon } from "./subject-icons.mjs";
 
 const MANAGED_BY = "schulmanager-calendar-sync";
-const DEFAULT_TITLE_TEMPLATE = "({location}) {summary}";
+const DEFAULT_TITLE_TEMPLATE = "({location}) {icon} {summary}";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CALENDAR_API_ROOT = "https://www.googleapis.com/calendar/v3";
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
@@ -77,17 +78,19 @@ export async function pushGoogleCalendar({ events, range, logger = console }) {
 }
 
 export function buildDesiredGoogleEvents(events) {
+  const template = titleTemplate();
+  const iconMapping = template.includes("{icon}") ? loadSubjectIconMapping() : undefined;
   const desiredEvents = new Map();
   for (const event of events) {
-    const googleEvent = toGoogleEvent(event);
+    const googleEvent = toGoogleEvent(event, { template, iconMapping });
     desiredEvents.set(googleEvent.id, googleEvent);
   }
   return desiredEvents;
 }
 
-function toGoogleEvent(event) {
+function toGoogleEvent(event, { template, iconMapping }) {
   const timeZone = event.timezone || "Europe/Berlin";
-  const title = renderEventTitle(titleTemplate(), event);
+  const title = renderEventTitle(template, event, { iconMapping });
   return {
     id: googleEventId(event.uid),
     summary:
@@ -122,17 +125,21 @@ function titleTemplate() {
   return process.env.GOOGLE_CALENDAR_TITLE_TEMPLATE || DEFAULT_TITLE_TEMPLATE;
 }
 
-export function renderEventTitle(template, event) {
-  const fields = titleFields(event);
+export function renderEventTitle(template, event, { iconMapping } = {}) {
+  const fields = titleFields(event, {
+    iconMapping,
+    resolveIcon: template.includes("{icon}")
+  });
   const substituted = substituteTemplate(template, fields);
   return cleanupRenderedTitle(substituted);
 }
 
-function titleFields(event) {
+function titleFields(event, { iconMapping, resolveIcon }) {
   return {
     summary: event.summary,
     subject: event.subjectLabel || "",
     subjectName: event.subjectName || "",
+    icon: resolveIcon ? subjectIcon(event.subjectName, event.subjectLabel, iconMapping) : "",
     location: event.location || "",
     teachers: (event.teacherNames || [])
       .map((name) => name.replace(/^.*\((.*)\)$/, "$1"))
@@ -154,8 +161,12 @@ function cleanupRenderedTitle(text) {
     .trim();
 }
 
+const GRAPHEME_SEGMENTER = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
 export function strikethroughTitle(title) {
-  return [...title].map((char) => `${char}̶`).join("");
+  return [...GRAPHEME_SEGMENTER.segment(title)]
+    .map(({ segment }) => `${segment}̶`)
+    .join("");
 }
 
 function isSameGoogleEvent(existing, desired) {
