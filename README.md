@@ -135,6 +135,7 @@ Runtime state lives under `data/` and is excluded from Git and Docker build cont
 - `token-store.json` — refreshed Schulmanager token;
 - `schedule.json` — privacy-reduced normalized timetable snapshot;
 - `status.json` — last successful synchronization status.
+- `changes.json` — event changes of the latest run compared with the previous one; overwritten on every sync.
 - `subject-icons.json` — editable subject-to-emoji mapping created on first use.
 
 Back up runtime data securely, restrict filesystem access, and rotate credentials immediately if they are exposed. Vulnerabilities should be reported privately according to [SECURITY.md](SECURITY.md).

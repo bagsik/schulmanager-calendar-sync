@@ -1,10 +1,11 @@
-import { chmod, mkdir, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { compareEvents, normalizeScheduleEvents } from "./schedule-events.mjs";
 import { normalizeExamEvents } from "./exam-events.mjs";
 import { SchulmanagerApi } from "./schulmanager-api.mjs";
 import { resolveSyncRange } from "./date-range.mjs";
 import { TokenStore } from "./token-store.mjs";
+import { buildChangesReport, diffSchedules } from "./webhook.mjs";
 
 export async function syncSchedule({
   dataDir = process.env.DATA_DIR || "/data",
@@ -55,16 +56,35 @@ export async function syncSchedule({
     events
   };
 
-  await writePrivateJson(
-    path.join(dataDir, "schedule.json"),
-    payload
-  );
+  const schedulePath = path.join(dataDir, "schedule.json");
+  const previous = await readPreviousSchedule(schedulePath);
+  const changes = buildChangesReport({
+    changes: diffSchedules(previous, payload),
+    previousGeneratedAt: previous?.generatedAt ?? null,
+    generatedAt,
+    timezone
+  });
+
+  await writePrivateJson(schedulePath, payload);
+  await writePrivateJson(path.join(dataDir, "changes.json"), changes);
   await writePrivateJson(
     path.join(dataDir, "status.json"),
     { ok: true, generatedAt, range, eventCount: events.length }
   );
 
-  return payload;
+  return { ...payload, changes };
+}
+
+async function readPreviousSchedule(filePath) {
+  try {
+    return JSON.parse(await readFile(filePath, "utf8"));
+  } catch (error) {
+    // A missing or unreadable snapshot means there is no baseline to diff.
+    if (error.code === "ENOENT" || error instanceof SyntaxError) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function writePrivateJson(filePath, value) {

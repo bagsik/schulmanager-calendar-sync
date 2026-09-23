@@ -8,7 +8,8 @@ This project processes school timetable information. Depending on the Schulmanag
 2. Timetable responses are normalized in memory.
 3. Raw response objects are discarded before `schedule.json` is written.
 4. Normalized events are sent to the configured Google Calendar when synchronization is enabled.
-5. Refreshed bearer tokens are stored locally with restrictive file permissions where supported.
+5. When `SYNC_WEBHOOK_URL` is set, the contents of `changes.json` are sent to that URL at the end of each run that found changes. Use `https` and an endpoint you control.
+6. Refreshed bearer tokens are stored locally with restrictive file permissions where supported.
 
 ## Local files
 
@@ -18,6 +19,7 @@ This project processes school timetable information. Depending on the Schulmanag
 | `data/google-service-account.json` | Google private key | Secret |
 | `data/token-store.json` | Refreshed bearer token | Secret |
 | `data/schedule.json` | Normalized timetable | Personal/organizational data |
+| `data/changes.json` | Normalized events changed by the latest run (before and after) | Personal/organizational data |
 | `data/status.json` | Range, timestamps, and event count | Operational metadata |
 | `data/subject-icons.json` | User-edited subject-to-emoji mapping | Configuration; may reveal school-specific subject names |
 

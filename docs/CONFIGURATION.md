@@ -22,8 +22,38 @@ Copy `.env.example` to `.env` and keep the resulting file outside version contro
 | `SYNC_INCLUDE_CANCELLED` | No | `false` | Include cancelled lessons as events. |
 | `SYNC_NO_MERGE_ADJACENT` | No | `false` | Keep adjacent identical lessons as separate events. |
 | `SYNC_EXAMS_ENABLED` | No | `false` | Also fetch exams (Klassenarbeiten) and sync them as calendar events alongside lessons. |
+| `SYNC_WEBHOOK_URL` | No | — | `http(s)` URL that receives the contents of `changes.json` as a JSON `POST` at the end of each sync. See [Change webhook](#change-webhook). |
 
 Boolean values accept `1`, `true`, `yes`, or `on` (case-insensitive).
+
+### Change webhook
+
+Every sync compares the new timetable with the previous `schedule.json` and writes all differences to `${DATA_DIR}/changes.json`. The file is overwritten on every run, including runs without changes. When `SYNC_WEBHOOK_URL` is set, its contents are sent as a single request at the end of the sync, after the Google Calendar push:
+
+```json
+{
+  "type": "schulmanager.schedule.changed",
+  "generatedAt": "2026-01-12T07:30:00.000Z",
+  "previousGeneratedAt": "2026-01-12T07:00:00.000Z",
+  "timezone": "Europe/Berlin",
+  "baseline": true,
+  "comparedRange": { "start": "2026-01-05", "end": "2026-01-25" },
+  "counts": { "added": 1, "removed": 0, "changed": 1 },
+  "added": [{ "uid": "…", "date": "2026-01-14", "summary": "Special: M", "…": "…" }],
+  "removed": [],
+  "changed": [{ "uid": "…", "fields": ["location"], "before": { "…": "…" }, "after": { "…": "…" } }]
+}
+```
+
+- A complete synthetic example is in [`examples/changes.example.json`](examples/changes.example.json): a substitution (one removed, one added event), a room change, and a new exam.
+- Events use the same normalized shape as `schedule.json`; raw Schulmanager responses are never sent.
+- Only dates covered by both the previous and the current sync range are compared, so days that just enter or leave the rolling window are not reported.
+- Events are matched by `uid`. A substitution usually gets a new `uid`, so it appears as one removed and one added event.
+- On the first run there is nothing to compare: `baseline` is `false` and all lists are empty.
+- Nothing is sent on the first run or when nothing changed.
+- The webhook is also sent when the Google Calendar push fails, because `changes.json` is already written by then.
+- Delivery failures are logged with the HTTP status only and do not fail the sync. There are no retries; the next run overwrites `changes.json`, so undelivered changes are not resent.
+- Redirects are not followed, and requests time out after 10 seconds.
 
 ## Google Calendar
 
