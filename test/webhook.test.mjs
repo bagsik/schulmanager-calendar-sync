@@ -77,6 +77,33 @@ test("diffSchedules ignores days that only moved in or out of the sync window", 
   assert.deepEqual([changes.added, changes.removed, changes.changed], [[], [], []]);
 });
 
+test("diffSchedules ignores events re-issued with a new uid but identical content", () => {
+  const range = { start: "2026-01-05", end: "2026-01-11" };
+  const previous = {
+    range,
+    events: [
+      event("old-1", "2026-01-05", { sourceType: "event", teacherNames: ["A"] }),
+      event("old-2", "2026-01-06"),
+      event("old-3", "2026-01-07")
+    ]
+  };
+  const current = {
+    range,
+    events: [
+      event("new-1", "2026-01-05", { teacherNames: ["A"], sourceType: "event" }),
+      event("new-2", "2026-01-06", { location: "R2" }),
+      event("new-3", "2026-01-07"),
+      event("new-4", "2026-01-07")
+    ]
+  };
+
+  const changes = diffSchedules(previous, current);
+
+  assert.deepEqual(changes.added.map((e) => e.uid), ["new-2", "new-4"]);
+  assert.deepEqual(changes.removed.map((e) => e.uid), ["old-2"]);
+  assert.deepEqual(changes.changed, []);
+});
+
 test("buildChangesReport bundles counts and metadata", () => {
   const changes = {
     comparedRange: { start: "2026-01-05", end: "2026-01-11" },

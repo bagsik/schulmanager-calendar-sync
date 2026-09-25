@@ -49,6 +49,7 @@ Every sync compares the new timetable with the previous `schedule.json` and writ
 - Events use the same normalized shape as `schedule.json`; raw Schulmanager responses are never sent.
 - Only dates covered by both the previous and the current sync range are compared, so days that just enter or leave the rolling window are not reported.
 - Events are matched by `uid`. A substitution usually gets a new `uid`, so it appears as one removed and one added event.
+- A removed and an added event whose fields are identical except for `uid` (Schulmanager re-created the entry with a new ID) are not reported.
 - On the first run there is nothing to compare: `baseline` is `false` and all lists are empty.
 - Nothing is sent on the first run or when nothing changed.
 - The webhook is also sent when the Google Calendar push fails, because `changes.json` is already written by then.

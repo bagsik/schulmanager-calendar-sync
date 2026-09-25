@@ -56,7 +56,42 @@ export function diffSchedules(previous, current) {
     }
   }
 
-  return { comparedRange: range, added, removed, changed };
+  return { comparedRange: range, ...dropReissuedEvents(added, removed), changed };
+}
+
+// Schulmanager sometimes re-creates an entry with a new source ID but identical
+// content, which changes its uid. Such removed/added pairs are not reported.
+function dropReissuedEvents(added, removed) {
+  const unmatched = new Map();
+  for (const event of removed) {
+    const key = contentKey(event);
+    unmatched.set(key, [...(unmatched.get(key) ?? []), event]);
+  }
+
+  const remainingAdded = [];
+  const reissued = new Set();
+  for (const event of added) {
+    const candidates = unmatched.get(contentKey(event));
+    if (candidates?.length) {
+      reissued.add(candidates.shift());
+    } else {
+      remainingAdded.push(event);
+    }
+  }
+
+  return {
+    added: remainingAdded,
+    removed: removed.filter((event) => !reissued.has(event))
+  };
+}
+
+function contentKey(event) {
+  return JSON.stringify(
+    Object.keys(event)
+      .filter((key) => key !== "uid")
+      .sort()
+      .map((key) => [key, event[key]])
+  );
 }
 
 export function hasChanges(report) {
