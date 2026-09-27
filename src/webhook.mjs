@@ -15,6 +15,9 @@ export function getWebhookUrl(value = process.env.SYNC_WEBHOOK_URL) {
   if (!["http:", "https:"].includes(url.protocol)) {
     throw new Error("SYNC_WEBHOOK_URL must use http or https.");
   }
+  if (url.protocol === "http:" && !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) {
+    throw new Error("SYNC_WEBHOOK_URL must use https except for loopback destinations.");
+  }
   return url.toString();
 }
 

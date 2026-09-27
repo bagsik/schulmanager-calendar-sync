@@ -26,6 +26,8 @@ All notable changes are documented here. The project follows [Semantic Versionin
 ### Fixed
 
 - Managed Google Calendar events deleted outside the service are restored from Google's cancelled tombstones instead of aborting synchronization with HTTP 409.
+- Bundle-version discovery accepts deferred minified assignments and searches enough same-origin frontend scripts to find late-loaded bundles.
+- Schedule reports remain recoverable after interrupted disk writes; remote webhook destinations require HTTPS.
 
 ## [0.1.0] - 2026-07-11
 

@@ -31,6 +31,7 @@ The service polls a rolling timetable window, converts lessons into stable calen
 | 🎨 Custom titles | Supports title templates, per-subject emoji icons, and optional cancelled-title strikethrough |
 | 🔐 Local secrets | Tokens and service-account credentials stay in `.env` and `data/` |
 | 🩺 Health checks | Exposes a minimal local `/health` endpoint without calendar identifiers |
+| 📣 Change notifications | Saves added, removed, and changed lessons in `data/changes.json`; optionally POSTs them to a configured HTTPS webhook (HTTP loopback allowed) |
 | 🐳 Self-hosted | Runs as an unprivileged, read-only Docker container |
 
 ```mermaid

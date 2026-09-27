@@ -1,4 +1,5 @@
-import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { compareEvents, normalizeScheduleEvents } from "./schedule-events.mjs";
 import { normalizeExamEvents } from "./exam-events.mjs";
@@ -65,14 +66,49 @@ export async function syncSchedule({
     timezone
   });
 
-  await writePrivateJson(schedulePath, payload);
-  await writePrivateJson(path.join(dataDir, "changes.json"), changes);
-  await writePrivateJson(
-    path.join(dataDir, "status.json"),
-    { ok: true, generatedAt, range, eventCount: events.length }
-  );
+  await persistSyncSnapshot({ dataDir, payload, changes });
 
   return { ...payload, changes };
+}
+
+export async function persistSyncSnapshot({ dataDir, payload, changes, writeJson = writePrivateJson, logger = console }) {
+  // Restore the previous report if the schedule cannot be committed; the next
+  // run can then compare against the unchanged previous snapshot.
+  const changesPath = path.join(dataDir, "changes.json");
+  let previousChanges = null;
+  try {
+    previousChanges = JSON.parse(await readFile(changesPath, "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT" && !(error instanceof SyntaxError)) {
+      throw error;
+    }
+  }
+  await writeJson(changesPath, changes);
+  try {
+    await writeJson(path.join(dataDir, "schedule.json"), payload);
+  } catch (error) {
+    try {
+      if (previousChanges === null) {
+        await rm(changesPath, { force: true });
+      } else {
+        await writePrivateJson(changesPath, previousChanges);
+      }
+    } catch {
+      logger.warn("Could not restore changes.json after a failed schedule write.");
+    }
+    throw error;
+  }
+  // Status is operational metadata: failure to persist it must not lose a webhook.
+  try {
+    await writeJson(path.join(dataDir, "status.json"), {
+      ok: true,
+      generatedAt: payload.generatedAt,
+      range: payload.range,
+      eventCount: payload.events.length
+    });
+  } catch {
+    logger.warn("Could not update status.json; schedule snapshot was saved.");
+  }
 }
 
 async function readPreviousSchedule(filePath) {
@@ -87,7 +123,7 @@ async function readPreviousSchedule(filePath) {
   }
 }
 
-export async function writePrivateJson(filePath, value) {
+export async function writePrivateJson(filePath, value, { writeFileImpl = writeFile } = {}) {
   try {
     await chmod(filePath, 0o600);
   } catch (error) {
@@ -95,11 +131,21 @@ export async function writePrivateJson(filePath, value) {
       throw error;
     }
   }
-  await writeFile(filePath, JSON.stringify(value, null, 2), {
-    encoding: "utf8",
-    mode: 0o600
-  });
-  await chmod(filePath, 0o600);
+  const temporaryPath = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.${randomUUID()}.tmp`
+  );
+  try {
+    await writeFileImpl(temporaryPath, JSON.stringify(value, null, 2), {
+      encoding: "utf8",
+      mode: 0o600,
+      flag: "wx"
+    });
+    await chmod(temporaryPath, 0o600);
+    await rename(temporaryPath, filePath);
+  } finally {
+    await rm(temporaryPath, { force: true });
+  }
 }
 
 function envFlag(name) {

@@ -25,6 +25,9 @@ test("getWebhookUrl returns null when unset and rejects non-http URLs", () => {
   assert.equal(getWebhookUrl(""), null);
   assert.equal(getWebhookUrl("  "), null);
   assert.equal(getWebhookUrl("https://hooks.example.test/x"), "https://hooks.example.test/x");
+  assert.equal(getWebhookUrl("http://127.0.0.1:5678/hook"), "http://127.0.0.1:5678/hook");
+  assert.equal(getWebhookUrl("http://localhost:5678/hook"), "http://localhost:5678/hook");
+  assert.throws(() => getWebhookUrl("http://hooks.example.test/x"), /https/i);
   assert.throws(() => getWebhookUrl("ftp://example.test"), /http or https/);
   assert.throws(() => getWebhookUrl("not a url"), /valid URL/);
 });

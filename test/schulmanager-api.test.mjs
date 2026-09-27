@@ -20,6 +20,18 @@ test("extractBundleVersion resolves the referenced build identifier", () => {
   assert.equal(extractBundleVersion(source), "abcDEF_123");
 });
 
+test("extractBundleVersion supports deferred minified assignments", () => {
+  const source =
+    'var E,I=d(()=>{E="420d0330d7"});let payload={bundleVersion:E,requests:[]}';
+  assert.equal(extractBundleVersion(source), "420d0330d7");
+});
+
+test("extractBundleVersion ignores destructuring defaults that are not runtime values", () => {
+  const source =
+    'const {E="wrong_123"}={E:"right_456"}; const c={bundleVersion:E};';
+  assert.equal(extractBundleVersion(source), null);
+});
+
 test("extractImportedScriptUrls resolves relative static and dynamic imports", () => {
   const urls = extractImportedScriptUrls(
     'import value from "./chunk-a.js"; import("/assets/chunk-b.js");',
@@ -37,6 +49,21 @@ test("extractImportedScriptUrls excludes protocol-relative cross-origin imports"
     "https://school.example/assets/main.js"
   );
   assert.deepEqual(urls, ["https://school.example/assets/safe.js"]);
+});
+
+test("discoverBundleVersion searches enough same-origin chunks for a late build id", async () => {
+  const version = await discoverBundleVersion("https://school.example", async (url) => {
+    if (url === "https://school.example/") {
+      return new Response('<script src="/0.js"></script>');
+    }
+    const index = Number(new URL(url).pathname.slice(1, -3));
+    return new Response(
+      index === 250
+        ? 'var E="420d0330d7";let payload={bundleVersion:E}'
+        : `import("./${index + 1}.js")`
+    );
+  });
+  assert.equal(version, "420d0330d7");
 });
 
 test("discoverBundleVersion does not fetch cross-origin scripts", async () => {

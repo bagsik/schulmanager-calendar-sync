@@ -22,7 +22,7 @@ Copy `.env.example` to `.env` and keep the resulting file outside version contro
 | `SYNC_INCLUDE_CANCELLED` | No | `false` | Include cancelled lessons as events. |
 | `SYNC_NO_MERGE_ADJACENT` | No | `false` | Keep adjacent identical lessons as separate events. |
 | `SYNC_EXAMS_ENABLED` | No | `false` | Also fetch exams (Klassenarbeiten) and sync them as calendar events alongside lessons. |
-| `SYNC_WEBHOOK_URL` | No | — | `http(s)` URL that receives the contents of `changes.json` as a JSON `POST` at the end of each sync. See [Change webhook](#change-webhook). |
+| `SYNC_WEBHOOK_URL` | No | — | HTTPS URL (or HTTP loopback address) that receives the contents of `changes.json` as a JSON `POST` at the end of each sync. See [Change webhook](#change-webhook). |
 
 Boolean values accept `1`, `true`, `yes`, or `on` (case-insensitive).
 
@@ -55,6 +55,8 @@ Every sync compares the new timetable with the previous `schedule.json` and writ
 - The webhook is also sent when the Google Calendar push fails, because `changes.json` is already written by then.
 - Delivery failures are logged with the HTTP status only and do not fail the sync. There are no retries; the next run overwrites `changes.json`, so undelivered changes are not resent.
 - Redirects are not followed, and requests time out after 10 seconds.
+- HTTPS is required for remote webhook destinations; unencrypted HTTP is accepted only for `localhost`, `127.0.0.1`, or `[::1]`. The URL and payload may contain sensitive school data.
+- Runtime JSON writes use private temporary files. If a schedule write fails, the previous snapshot and report are restored so the next run can retry the comparison. `status.json` is written after the new snapshot and may lag if its own write fails; this is logged without suppressing webhook delivery.
 
 ## Google Calendar
 
