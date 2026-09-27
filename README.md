@@ -31,6 +31,7 @@ The service polls a rolling timetable window, converts lessons into stable calen
 | 🎨 Custom titles | Supports title templates, per-subject emoji icons, and optional cancelled-title strikethrough |
 | 🔐 Local secrets | Tokens and service-account credentials stay in `.env` and `data/` |
 | 🩺 Health checks | Exposes a minimal local `/health` endpoint without calendar identifiers |
+| 📣 Change notifications | Saves added, removed, and changed lessons in `data/changes.json`; optionally POSTs them to a configured HTTPS webhook (HTTP loopback allowed) |
 | 🐳 Self-hosted | Runs as an unprivileged, read-only Docker container |
 
 ```mermaid
@@ -135,6 +136,7 @@ Runtime state lives under `data/` and is excluded from Git and Docker build cont
 - `token-store.json` — refreshed Schulmanager token;
 - `schedule.json` — privacy-reduced normalized timetable snapshot;
 - `status.json` — last successful synchronization status.
+- `changes.json` — event changes of the latest run compared with the previous one; overwritten on every sync.
 - `subject-icons.json` — editable subject-to-emoji mapping created on first use.
 
 Back up runtime data securely, restrict filesystem access, and rotate credentials immediately if they are exposed. Vulnerabilities should be reported privately according to [SECURITY.md](SECURITY.md).

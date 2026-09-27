@@ -1,0 +1,132 @@
+{
+  "type": "schulmanager.schedule.changed",
+  "generatedAt": "2026-01-13T06:30:00.000Z",
+  "previousGeneratedAt": "2026-01-13T06:00:00.000Z",
+  "timezone": "Europe/Berlin",
+  "baseline": true,
+  "comparedRange": {
+    "start": "2025-12-29",
+    "end": "2026-01-25"
+  },
+  "counts": {
+    "added": 2,
+    "removed": 1,
+    "changed": 1
+  },
+  "added": [
+    {
+      "uid": "schulmanager-2026-01-14-3-changedLesson-90001",
+      "date": "2026-01-14",
+      "startTime": "09:50",
+      "endTime": "10:35",
+      "timezone": "Europe/Berlin",
+      "summary": "Changed: E",
+      "description": "Englisch (E)\nTeachers: ABC (Alex Beispiel)\nRoom: B204\nClass hour: 3\nOriginal: D A101\nSchulmanager type: changedLesson",
+      "location": "B204",
+      "status": "CONFIRMED",
+      "classHourNumber": "3",
+      "subjectLabel": "E",
+      "subjectName": "Englisch",
+      "teacherAbbreviations": ["ABC"],
+      "teacherNames": ["ABC (Alex Beispiel)"],
+      "room": "B204",
+      "sourceType": "changedLesson",
+      "cancelled": false,
+      "changed": true,
+      "special": false
+    },
+    {
+      "uid": "schulmanager-exam-70001",
+      "date": "2026-01-20",
+      "startTime": "08:00",
+      "endTime": "09:30",
+      "timezone": "Europe/Berlin",
+      "summary": "Klassenarbeit: M",
+      "description": "Mathematik (M)\nType: Klassenarbeit",
+      "location": "",
+      "status": "CONFIRMED",
+      "classHourNumber": "1",
+      "subjectLabel": "M",
+      "subjectName": "Mathematik",
+      "examType": "Klassenarbeit",
+      "teacherAbbreviations": [],
+      "teacherNames": [],
+      "room": "",
+      "sourceType": "exam",
+      "cancelled": false,
+      "changed": false,
+      "special": false
+    }
+  ],
+  "removed": [
+    {
+      "uid": "schulmanager-2026-01-14-3-regularLesson-50001",
+      "date": "2026-01-14",
+      "startTime": "09:50",
+      "endTime": "10:35",
+      "timezone": "Europe/Berlin",
+      "summary": "D",
+      "description": "Deutsch (D)\nTeachers: XYZ (Sam Muster)\nRoom: A101\nClass hour: 3\nSchulmanager type: regularLesson",
+      "location": "A101",
+      "status": "CONFIRMED",
+      "classHourNumber": "3",
+      "subjectLabel": "D",
+      "subjectName": "Deutsch",
+      "teacherAbbreviations": ["XYZ"],
+      "teacherNames": ["XYZ (Sam Muster)"],
+      "room": "A101",
+      "sourceType": "regularLesson",
+      "cancelled": false,
+      "changed": false,
+      "special": false
+    }
+  ],
+  "changed": [
+    {
+      "uid": "schulmanager-2026-01-15-5-regularLesson-50002",
+      "fields": ["description", "location", "room"],
+      "before": {
+        "uid": "schulmanager-2026-01-15-5-regularLesson-50002",
+        "date": "2026-01-15",
+        "startTime": "11:40",
+        "endTime": "12:25",
+        "timezone": "Europe/Berlin",
+        "summary": "BIO",
+        "description": "Biologie (BIO)\nTeachers: QRS (Kim Probe)\nRoom: C012\nClass hour: 5\nSchulmanager type: regularLesson",
+        "location": "C012",
+        "status": "CONFIRMED",
+        "classHourNumber": "5",
+        "subjectLabel": "BIO",
+        "subjectName": "Biologie",
+        "teacherAbbreviations": ["QRS"],
+        "teacherNames": ["QRS (Kim Probe)"],
+        "room": "C012",
+        "sourceType": "regularLesson",
+        "cancelled": false,
+        "changed": false,
+        "special": false
+      },
+      "after": {
+        "uid": "schulmanager-2026-01-15-5-regularLesson-50002",
+        "date": "2026-01-15",
+        "startTime": "11:40",
+        "endTime": "12:25",
+        "timezone": "Europe/Berlin",
+        "summary": "BIO",
+        "description": "Biologie (BIO)\nTeachers: QRS (Kim Probe)\nRoom: C014\nClass hour: 5\nSchulmanager type: regularLesson",
+        "location": "C014",
+        "status": "CONFIRMED",
+        "classHourNumber": "5",
+        "subjectLabel": "BIO",
+        "subjectName": "Biologie",
+        "teacherAbbreviations": ["QRS"],
+        "teacherNames": ["QRS (Kim Probe)"],
+        "room": "C014",
+        "sourceType": "regularLesson",
+        "cancelled": false,
+        "changed": false,
+        "special": false
+      }
+    }
+  ]
+}

@@ -11,6 +11,7 @@ All notable changes are documented here. The project follows [Semantic Versionin
 - Community health, contribution, support, and security files.
 - Parent-account student discovery with an explicit child-selection override.
 - Custom Google Calendar title templates, per-subject emoji mappings, optional cancelled-title strikethrough, and support for included cancelled and replacement-event lessons.
+- `data/changes.json` with all event changes since the previous sync, plus an optional `SYNC_WEBHOOK_URL` that receives it in one request at the end of each sync.
 
 ### Changed
 
@@ -25,6 +26,8 @@ All notable changes are documented here. The project follows [Semantic Versionin
 ### Fixed
 
 - Managed Google Calendar events deleted outside the service are restored from Google's cancelled tombstones instead of aborting synchronization with HTTP 409.
+- Bundle-version discovery accepts deferred minified assignments and searches enough same-origin frontend scripts to find late-loaded bundles.
+- Schedule reports remain recoverable after interrupted disk writes; remote webhook destinations require HTTPS.
 
 ## [0.1.0] - 2026-07-11
 

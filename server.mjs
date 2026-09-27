@@ -5,10 +5,12 @@ import {
   pushGoogleCalendar
 } from "./src/google-calendar-sync.mjs";
 import { syncSchedule } from "./src/sync.mjs";
+import { getWebhookUrl, hasChanges, sendWebhook } from "./src/webhook.mjs";
 
 const PORT = Number(process.env.PORT || 8080);
 const DATA_DIR = process.env.DATA_DIR || "/data";
 const INTERVAL_MINUTES = Number(process.env.SYNC_INTERVAL_MINUTES || 30);
+const WEBHOOK_URL = getWebhookUrl();
 
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error("PORT must be an integer between 1 and 65535.");
@@ -70,8 +72,9 @@ async function runSync() {
   const startedAt = new Date().toISOString();
   console.log(`Sync started at ${startedAt}`);
 
+  let result = null;
   try {
-    const result = await syncSchedule({ dataDir: DATA_DIR });
+    result = await syncSchedule({ dataDir: DATA_DIR });
     const googleCalendar = isGoogleCalendarSyncEnabled()
       ? await pushGoogleCalendar({
           events: result.events,
@@ -97,6 +100,31 @@ async function runSync() {
       error: "Synchronization failed; inspect service logs."
     };
     console.error(`Sync failed: ${safeLogMessage(error)}`);
+  }
+
+  // Once changes.json is written, send it even if a later step such as the
+  // Google Calendar push failed.
+  if (WEBHOOK_URL && result) {
+    lastStatus = { ...lastStatus, webhook: await notifyWebhook(result.changes) };
+  }
+}
+
+// Sends the bundled changes of one run in a single request. Failures are logged
+// but do not fail the sync; changes.json is overwritten by the next run.
+async function notifyWebhook(report) {
+  if (!hasChanges(report)) {
+    return { delivered: false, reason: report.baseline ? "no-changes" : "no-baseline" };
+  }
+
+  try {
+    const { status } = await sendWebhook({ url: WEBHOOK_URL, payload: report });
+    console.log(
+      `Webhook delivered (HTTP ${status}): ${report.counts.added} added, ${report.counts.removed} removed, ${report.counts.changed} changed`
+    );
+    return { delivered: true, counts: report.counts };
+  } catch (error) {
+    console.error(`Webhook failed: ${safeLogMessage(error)}`);
+    return { delivered: false, reason: "error", counts: report.counts };
   }
 }
 

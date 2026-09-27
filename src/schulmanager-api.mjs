@@ -1,4 +1,5 @@
 const DEFAULT_BASE_URL = "https://login.schulmanager-online.de";
+const MAX_FRONTEND_SCRIPTS = 1500;
 
 export class SchulmanagerApi {
   constructor({
@@ -189,7 +190,7 @@ export async function discoverBundleVersion(baseUrl, fetchImpl = globalThis.fetc
 
   const seen = new Set();
   const checked = [];
-  while (queue.length > 0 && seen.size < 250) {
+  while (queue.length > 0 && seen.size < MAX_FRONTEND_SCRIPTS) {
     const scriptUrl = queue.shift();
     if (seen.has(scriptUrl)) {
       continue;
@@ -291,7 +292,7 @@ export function extractBundleVersion(scriptText) {
   const variableName = escapeRegExp(bundleMatch[1]);
   const assignment = scriptText.match(
     new RegExp(
-      `(?:var|let|const)\\s+${variableName}\\s*=\\s*["']([A-Za-z0-9_-]{6,})["']`
+      `(?:(?:var|let|const)\\s+|=>\\s*\\{|;)\\s*${variableName}\\s*=\\s*["']([A-Za-z0-9_-]{6,})["']`
     )
   );
 
